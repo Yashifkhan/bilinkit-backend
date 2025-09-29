@@ -19,7 +19,8 @@ const addProduct = (req, resp) => {
 const getProducts = (req, resp) => {
   const shopkeeper_id = req.params.id
   if (shopkeeper_id) {
-    const sql = `SELECT * FROM  products where shopkeeper_id = ? AND status = 1 `
+
+    const sql = `SELECT * FROM  products where shopkeeper_id = ? AND status = 1`
     db.query(sql, [shopkeeper_id], (err, result) => {
       if (err) {
         return resp.status(500).json({ message: "server error", err, success: false })
