@@ -1,10 +1,8 @@
 import db from "../config/db.js";
 
 const addProduct = (req, resp) => {
-  const { shopkeeper_id, category, name, description, price, discount, stock } = req.body
+  const { shopkeeper_id, category, name, description, price, discount, stock } = req.body  
 
-  console.log("shop keeper id------------->>>>>>",shopkeeper_id);
-  
   const image_url = req.file ? `/uploads/${req.file.filename}` : null;
   const sql = 'INSERT INTO products (shopkeeper_id,category,name,description ,price,discount,stock,image_url) VALUES  ( ? ,?, ? , ? , ? , ? , ? ,? )'
   db.query(sql, [shopkeeper_id,category, name, description, price, discount, stock, image_url], (err, result) => {
