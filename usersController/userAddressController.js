@@ -30,3 +30,28 @@ export const getAddresById=(req,resp)=>{
         }
     })
 }
+
+
+// Update Address Controller
+export const updateAddress = (req, resp) => {
+  const user_id = req.params.id;
+  const { landmark, state, pincode, district, country, latitude = "", longitude = "" } = req.body;
+
+  const sql = `
+    UPDATE address 
+    SET landmark = ?, state = ?, pincode = ?, district = ?, country = ?, latitude = ?, longitude = ?
+    WHERE user_id = ?
+  `;
+
+  db.query(sql, [landmark, state, pincode, district, country, latitude, longitude, user_id], (err, result) => {
+    if (err) {
+      return resp.status(500).json({ message: "Server error", success: false, error: err });
+    }
+
+    if (result.affectedRows === 0) {
+      return resp.status(404).json({ message: "No address found for this user", success: false });
+    }
+
+    return resp.status(200).json({ message: "Address updated successfully", success: true });
+  });
+};
