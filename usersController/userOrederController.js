@@ -1,68 +1,94 @@
 import db from "../config/db.js";
 
 export const addOrders = (req, resp) => {
-    const user_id = req.params.id;   // from URL
-    console.log("user id", user_id);
-    console.log("req ki body", req.body);
-    let { product_id, delivered_address, payment_method, buy_price, quantity } = req.body;
-    // convert object to JSON string if it's not already string
-    if (typeof delivered_address === "object") {
-        delivered_address = JSON.stringify(delivered_address);
-    }
-    const sql = `
-      INSERT INTO orders 
-      (user_id, product_id, delivered_address, payment_method, buy_price, quantity) 
-      VALUES (?,?,?,?,?,?)
-    `;
+  const user_id = req.params.id; // from URL
+  console.log("User ID:", user_id);
+  console.log("Request Body:", req.body);
 
-    db.query(
-        sql,
-        [user_id, product_id, delivered_address, payment_method, buy_price, quantity],
-        (err, result) => {
-            if (err) {
-                return resp.status(500).json({
-                    message: "Server error",
-                    success: false,
-                    error: err
-                });
-            }
-            return resp.status(200).json({
-                message: "Order Confirm",
-                success: true,
-                data: result
-            });
-        }
-    );
+  let { product_id, delivered_address, payment_method, buy_price, quantity } = req.body;
 
-    console.log("product_id",product_id);
-    console.log("quantity",quantity);
+  // Convert address to JSON string if needed
+  if (typeof delivered_address === "object") {
+    delivered_address = JSON.stringify(delivered_address);
+  }
 
-    const getStock="select stock from products where id=?"
-    db.query(getStock,[product_id],(err,result)=>{
-      if(err){
-        return
-      }else{
-        result
+  // 1️⃣ Insert order first
+  const insertOrderSQL = `
+    INSERT INTO orders 
+    (user_id, product_id, delivered_address, payment_method, buy_price, quantity) 
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    insertOrderSQL,
+    [user_id, product_id, delivered_address, payment_method, buy_price, quantity],
+    (err, orderResult) => {
+      if (err) {
+        console.error("Order Insert Error:", err);
+        return resp.status(500).json({
+          message: "Server error while placing order",
+          success: false,
+          error: err,
+        });
       }
 
-      console.log("result of stock ",result[0]);
-      const  newStock=result[0]-quantity
-      console.log("new stock ",newStock);
-      const updateStock=`UPDATE products set stock =${newStock} where id=${product_id}`
-          db.query([updateStock,(err,result)=>{
-            if(err){
-              return "products not found "
-            }else{
-              resp.status(200).json({message:"stock updated succesfully"})
-      
-            }
-          }])
-      
-    })
-    
-    
-  
+      console.log("Order inserted:", orderResult);
 
+      // 2️⃣ Get current stock for product
+      const getStockSQL = `SELECT stock FROM products WHERE id = ?`;
+      db.query(getStockSQL, [product_id], (err, stockResult) => {
+        if (err) {
+          console.error("Stock Fetch Error:", err);
+          return resp.status(500).json({
+            message: "Error fetching product stock",
+            success: false,
+            error: err,
+          });
+        }
+
+        if (stockResult.length === 0) {
+          return resp.status(404).json({
+            message: "Product not found",
+            success: false,
+          });
+        }
+
+        const currentStock = stockResult[0].stock;
+        const newStock = currentStock - quantity;
+
+        // Prevent stock from going below zero
+        if (newStock < 0) {
+          return resp.status(400).json({
+            message: "Not enough stock available",
+            success: false,
+          });
+        }
+
+        // 3️⃣ Update stock
+        const updateStockSQL = `UPDATE products SET stock = ? WHERE id = ?`;
+        db.query(updateStockSQL, [newStock, product_id], (err, updateResult) => {
+          if (err) {
+            console.error("Stock Update Error:", err);
+            return resp.status(500).json({
+              message: "Error updating stock",
+              success: false,
+              error: err,
+            });
+          }
+
+          console.log(`Stock updated successfully for product ${product_id}: ${newStock}`);
+
+          // ✅ Final response after both success
+          return resp.status(200).json({
+            message: "Order placed and stock updated successfully",
+            success: true,
+            order: orderResult,
+            newStock,
+          });
+        });
+      });
+    }
+  );
 };
 
 
