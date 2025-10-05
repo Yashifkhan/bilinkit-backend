@@ -49,7 +49,7 @@ import express from "express";
 import path from "path";
 import multer from "multer";
 import fs from "fs";
-import { addProduct, getAllProducts, getProducts, updateProduct, updateProductStatus } from "../productsController/productsController.js";
+import { addOfferProducts, addProduct, getAllProducts, getProducts, updateProduct, updateProductStatus } from "../productsController/productsController.js";
 
 const productRouter = express.Router();
 
@@ -87,5 +87,6 @@ productRouter.put("/updateProduct/:id",   uploads.single('image'),updateProduct)
 productRouter.get("/getProducts/:id", getProducts);
 productRouter.get("/getAllProducts",getAllProducts)
 productRouter.put("/updateProductStatus/:id",updateProductStatus)
+productRouter.post("/addOfferProducts",addOfferProducts)
 
 export { productRouter };

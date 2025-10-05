@@ -3,17 +3,17 @@ import db from "../config/db.js"
 // import db from "../config/db.js"
 
 const addShopKeeper = (req, resp) => {
-    const {name, email, password_hash, phone, shop_name, shop_address,category} = req.body
+    const { name, email, password_hash, phone, shop_name, shop_address, category } = req.body
     // console.log("body result",name,email);
-    
+
     const sql = `INSERT INTO shopkeeper 
     (name, email, password_hash, phone, shop_name, shop_address,category)
      VALUES (?,?,?,?,?,?,?)`
-    db.query(sql,  [name, email, password_hash, phone, shop_name, shop_address,category], (err, result) => {
+    db.query(sql, [name, email, password_hash, phone, shop_name, shop_address, category], (err, result) => {
         if (err) {
             resp.status(500).json({ message: "server error", err, success: false })
         } else {
-            resp.status(200).json({ message: "shop keeper add succssfully", success: true,data:result })
+            resp.status(200).json({ message: "shop keeper add succssfully", success: true, data: result })
         }
     })
 }
@@ -32,7 +32,7 @@ const getShopKeeper = (req, resp) => {
 const updateShopKeeperStatus = (req, resp) => {
     const shopKeeperId = req.params.id;
     const { status } = req.body;   // 👈 new status should come from the request body
-    
+
 
     console.log("shop keeper id:", shopKeeperId, "new status:", status);
 
@@ -65,4 +65,6 @@ const updateShopKeeperStatus = (req, resp) => {
 
 
 
-export { addShopKeeper, getShopKeeper,updateShopKeeperStatus };
+
+
+export { addShopKeeper, getShopKeeper, updateShopKeeperStatus };

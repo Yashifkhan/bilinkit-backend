@@ -1,11 +1,11 @@
 import db from "../config/db.js";
 
 const addProduct = (req, resp) => {
-  const { shopkeeper_id, category, name, description, price, discount, stock } = req.body  
+  const { shopkeeper_id, category, name, description, price, discount, stock } = req.body
 
   const image_url = req.file ? `/uploads/${req.file.filename}` : null;
   const sql = 'INSERT INTO products (shopkeeper_id,category,name,description ,price,discount,stock,image_url) VALUES  ( ? ,?, ? , ? , ? , ? , ? ,? )'
-  db.query(sql, [shopkeeper_id,category, name, description, price, discount, stock, image_url], (err, result) => {
+  db.query(sql, [shopkeeper_id, category, name, description, price, discount, stock, image_url], (err, result) => {
     if (err) {
       return resp.status(500).json({ message: "server error", err, success: false })
     }
@@ -67,22 +67,23 @@ const updateProduct = (req, res) => {
   });
 };
 
-const updateProductStatus=(req,resp)=>{
-  const productId=req.params.id
-  const status=req.body
-  console.log("new status",status);
-  
+const updateProductStatus = (req, resp) => {
+  const productId = req.params.id
+  const status = req.body
+  console.log("new status", status);
+
   console.log("product updated id");
-  const sql="UPDATE products set status =?  where id=?"
-  db.query(sql,[status,productId],(err,result)=>{
-    if(err){
-      return resp.status(400).json({message:"product  is not found",err})
-    }else{
-      resp.status(200).json({message:"Product Status Update Suiccesfully",success:true})
+  const sql = "UPDATE products set status =?  where id=?"
+  db.query(sql, [status, productId], (err, result) => {
+    if (err) {
+      return resp.status(400).json({ message: "product  is not found", err })
+    } else {
+      resp.status(200).json({ message: "Product Status Update Suiccesfully", success: true })
     }
-  }) 
-  
+  })
+
 }
+
 const getAllProducts = (req, resp) => {
   // products ke andar shopkeeper_id hai, isse users table ke id se join karenge
   // const sql = `
@@ -94,8 +95,7 @@ const getAllProducts = (req, resp) => {
   //   INNER JOIN users u ON p.shopkeeper_id = u.id
   // `;
 
-   const sql =`SELECT * FROM products`
-
+  const sql = `SELECT * FROM products where status = 1 AND is_offer = 0`
   db.query(sql, (err, result) => {
     if (err) {
       console.error("DB error:", err);
@@ -104,7 +104,7 @@ const getAllProducts = (req, resp) => {
         .json({ message: "Server error", success: false, err });
     }
     // console.log("result",result);
-    
+
 
     return resp.status(200).json({
       message: "Get All Products Successfully",
@@ -114,7 +114,36 @@ const getAllProducts = (req, resp) => {
   });
 };
 
+const addOfferProducts = (req, resp) => {
+  const { ProductsId, discount, offersDate, shopkeeper_id } = req.body;
+
+  if (!ProductsId || ProductsId.length === 0 || !discount || !offersDate || !shopkeeper_id) {
+    return resp.status(400).json({ message: "Missing required fields", success: false });
+  }
+
+  const start_date = offersDate.startDate;
+  const end_date = offersDate.endDate;
+
+  const values = ProductsId.map((product_id) => [shopkeeper_id, product_id, discount, start_date, end_date]);
+  const sql = `INSERT INTO offers_products (shopkeeper_id, product_id, discount, start_date, end_date) VALUES ?`;
+
+  db.query(sql, [values], (err, result) => {
+    if (err) {
+      console.error("Error adding offers:", err);
+      return resp.status(500).json({ message: "Offer is not added", success: false, error: err });
+    }
+
+    const sql = `UPDATE products SET is_offer = 1 WHERE id IN (?)`;
+    db.query(sql, [ProductsId], (err, result) => {
+      if (err) {
+        console.error("Error updating products:", err);
+        return resp.status(500).json({ message: "Error updating products", success: false, error: err });
+      }
+    })
+    return resp.status(200).json({ message: "Offers added successfully and Products updated successfully with offer ", success: true, affectedRows: result.affectedRows });
+  });
+};
 
 
 
-export { addProduct, getProducts, updateProduct,getAllProducts ,updateProductStatus}
+export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts }
