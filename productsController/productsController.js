@@ -145,5 +145,28 @@ const addOfferProducts = (req, resp) => {
 };
 
 
+const getOffersProducts=(req,resp)=>{
+  const sql ="SELECT * FROM offers_products where status=1"
+  db.query(sql,(err,result)=>{
+    if(err){
+      return resp.status(500).json({message:"server error",success:true,error:err})
+    }else{
+      const ProductsId=result.map((p)=>p.product_id)
+      
+      const getProductBuId="SELECT * FROM products where id=? AND is_offer = 1 AND status=1"
+      db.query(getProductBuId,[ProductsId[0]],(err,productResult)=>{
+        if(err){
+          return resp.json({message:"products not found check Products data",success:false,error:err})
+          }
+          result[0].productsInfo=productResult[0]
+          console.log("result",result);
+          return resp.status(200).json({message:"offers data get succesfully",success:true,data:result})
+          })
 
-export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts }
+          
+    }
+  })
+}
+
+
+export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts,getOffersProducts }
