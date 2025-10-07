@@ -145,28 +145,63 @@ const addOfferProducts = (req, resp) => {
 };
 
 
-const getOffersProducts=(req,resp)=>{
-  const sql ="SELECT * FROM offers_products where status=1"
-  db.query(sql,(err,result)=>{
-    if(err){
-      return resp.status(500).json({message:"server error",success:true,error:err})
-    }else{
-      const ProductsId=result.map((p)=>p.product_id)
-      
-      const getProductBuId="SELECT * FROM products where id=? AND is_offer = 1 AND status=1"
-      db.query(getProductBuId,[ProductsId[0]],(err,productResult)=>{
-        if(err){
-          return resp.json({message:"products not found check Products data",success:false,error:err})
-          }
-          result[0].productsInfo=productResult[0]
-          console.log("result",result);
-          return resp.status(200).json({message:"offers data get succesfully",success:true,data:result})
-          })
+const getOffersProducts = (req, resp) => {
+  const sql = "SELECT * FROM offers_products WHERE status = 1";
 
-          
+  db.query(sql, (err, offersResult) => {
+    if (err) {
+      return resp.status(500).json({
+        message: "Server error",
+        success: false,
+        error: err,
+      });
     }
-  })
-}
+
+    if (!offersResult.length) {
+      return resp.status(404).json({
+        message: "No offers found",
+        success: false,
+      });
+    }
+
+    // Extract product IDs from offers
+    const productIds = offersResult.map((p) => p.product_id);
+    console.log("Product IDs:", productIds);
+
+    const getProductsSql =
+      "SELECT * FROM products WHERE id IN (?) AND is_offer = 1 AND status = 1";
+
+    db.query(getProductsSql, [productIds], (err, productsResult) => {
+      if (err) {
+        return resp.status(500).json({
+          message: "Products not found, check products data",
+          success: false,
+          error: err,
+        });
+      }
+
+      // ✅ Merge each offer with its corresponding product info
+      const mergedOffers = offersResult.map((offer) => {
+        const product = productsResult.find(
+          (prod) => prod.id === offer.product_id
+        );
+
+        return {
+          ...offer,
+          productsInfo: product || null,
+        };
+      });
+
+      console.log("Merged Offers:", mergedOffers);
+
+      return resp.status(200).json({
+        message: "Offers data fetched successfully",
+        success: true,
+        data: mergedOffers,
+      });
+    });
+  });
+};
 
 
 export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts,getOffersProducts }
