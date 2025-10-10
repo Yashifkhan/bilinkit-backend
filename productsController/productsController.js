@@ -144,6 +144,8 @@ const addOfferProducts = (req, resp) => {
   });
 };
 
+console.log("yashif");
+
 
 const getOffersProducts = (req, resp) => {
   const sql = "SELECT * FROM offers_products WHERE status = 1";
@@ -202,6 +204,65 @@ const getOffersProducts = (req, resp) => {
     });
   });
 };
+
+
+// const getOffersProducts = (req, resp) => {
+//   const sql = "SELECT * FROM offers_products WHERE status = 1";
+
+//   db.query(sql, (err, offersResult) => {
+//     if (err) {
+//       return resp.status(500).json({
+//         message: "Server error",
+//         success: false,
+//         error: err,
+//       });
+//     }
+
+//     if (!offersResult.length) {
+//       return resp.status(404).json({
+//         message: "No offers found",
+//         success: false,
+//       });
+//     }
+
+//     // Extract product IDs from offers
+//     const productIds = offersResult.map((p) => p.product_id);
+//     console.log("Product IDs:", productIds);
+
+//     const getProductsSql =
+//       "SELECT * FROM products WHERE id IN (?) AND is_offer = 1 AND status = 1";
+
+//     db.query(getProductsSql, [productIds], (err, productsResult) => {
+//       if (err) {
+//         return resp.status(500).json({
+//           message: "Products not found, check products data",
+//           success: false,
+//           error: err,
+//         });
+//       }
+
+//       // ✅ Merge each offer with its corresponding product info
+//       const mergedOffers = offersResult.map((offer) => {
+//         const product = productsResult.find(
+//           (prod) => prod.id === offer.product_id
+//         );
+
+//         return {
+//           ...offer,
+//           productsInfo: product || null,
+//         };
+//       });
+
+//       console.log("Merged Offers:", mergedOffers);
+
+//       return resp.status(200).json({
+//         message: "Offers data fetched successfully",
+//         success: true,
+//         data: mergedOffers,
+//       });
+//     });
+//   });
+// };
 
 
 export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts,getOffersProducts }
