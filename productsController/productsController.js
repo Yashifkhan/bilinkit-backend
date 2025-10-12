@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import cron from "node-cron"
 
 const addProduct = (req, resp) => {
   const { shopkeeper_id, category, name, description, price, discount, stock } = req.body
@@ -144,9 +145,6 @@ const addOfferProducts = (req, resp) => {
   });
 };
 
-console.log("yashif");
-
-
 const getOffersProducts = (req, resp) => {
   const sql = "SELECT * FROM offers_products WHERE status = 1";
 
@@ -168,7 +166,7 @@ const getOffersProducts = (req, resp) => {
 
     // Extract product IDs from offers
     const productIds = offersResult.map((p) => p.product_id);
-    console.log("Product IDs:", productIds);
+    // console.log("Product IDs:", productIds);
 
     const getProductsSql =
       "SELECT * FROM products WHERE id IN (?) AND is_offer = 1 AND status = 1";
@@ -194,7 +192,7 @@ const getOffersProducts = (req, resp) => {
         };
       });
 
-      console.log("Merged Offers:", mergedOffers);
+      // console.log("Merged Offers:", mergedOffers);
 
       return resp.status(200).json({
         message: "Offers data fetched successfully",
@@ -204,6 +202,52 @@ const getOffersProducts = (req, resp) => {
     });
   });
 };
+
+
+let job;
+
+// function declartion for end offer 
+const endOffer =(req,resp)=>{
+  console.log("end products offer function is executed");
+  
+  const getExpireOfferProduct="SELECT * from offers_products where end_date < NOW() and  status = 1"
+  db.query(getExpireOfferProduct,(err,expireProductsResult)=>{
+    if(err){
+      return resp.status(500).json({message:"offers product not get",success:false,error:err})
+    }
+
+    if (expireProductsResult.length === 0) {
+      return resp.status(200).json({message: "No expired offers to update",success: true});
+     }
+
+  console.log("result of get expire products",expireProductsResult);
+  const expireProductsIds=expireProductsResult.map((p)=>p.product_id)
+  console.log("expire products ids" ,expireProductsIds);
+  const updateStatusExpireProducs=`update offers_products set status = 0 where product_id in (?)`
+  db.query(updateStatusExpireProducs,[expireProductsIds],(err,updateStatusExpireResult)=>{
+    if(err){
+       return resp.status(500).json({message:"status not updated offers products ",success:false,error:err})
+    }
+    console.log("updateStatusExpireResult",updateStatusExpireResult);
+    const updateStatusRagularProducts=`update products set is_offer = 0 where id in (?) and status = 1`
+    db.query(updateStatusRagularProducts,[expireProductsIds],(err,result)=>{
+      if(err){
+         return resp.status(500).json({message:"product not found",success:false,error:err})
+      }
+      // resp.status(200).json({message:"offers is end , next offer is comming soon ",success:true})
+      job.stop()
+    })
+    
+  })
+      
+  })
+ 
+}
+// function calling and job start 
+job =cron.schedule('0 14 * * *' ,(req,resp)=>{
+  endOffer()
+})
+
 
 
 
