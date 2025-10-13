@@ -245,7 +245,7 @@ const endOffer =(req,resp)=>{
 }
 // function calling and job start 
 job =cron.schedule('0 14 * * *' ,(req,resp)=>{
-  endOffer()
+  // endOffer()
 })
 
 
