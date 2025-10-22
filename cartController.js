@@ -36,10 +36,9 @@ export const addToCart = (req, resp) => {
 
 export const getCartItems = (req, resp) => {
     const user_id = req.params.id;
-    console.log("user id is:", user_id);
 
     // Step 1: Get cart items for this user
-    const sql = "SELECT * FROM cart WHERE user_id = ?";
+    const sql = "SELECT * FROM cart WHERE user_id = ? AND quantity > 0";
     db.query(sql, [user_id], (err, cartItems) => {
         if (err) {
             return resp.status(500).json({
@@ -92,19 +91,64 @@ export const getCartItems = (req, resp) => {
 };
 
 
+// export const deletItemFromCart = (req, resp) => {
+
+//     console.log("delect from cart function is executed");
+
+//     const product_id = req.params.productId
+//     const user_id = req.params.userId
+//     console.log("user id:", user_id,);
+//     console.log("products id:", product_id);
+
+//     const sql = "delete  from cart where user_id=? AND product_id = ?"
+//     db.query(sql, [ user_id,product_id], (err, result) => {
+//         if (err) {
+//             return resp.status(500).json({ message: 'server error', success: false,error:err })
+//         } 
+//             resp.status(200).json({ message: "delete item  from cart", success: true,data:result })
+//     })
+// }
+
 export const deletItemFromCart = (req, resp) => {
+
     const product_id = req.params.productId
     const user_id = req.params.userId
-    console.log("user id:", user_id,);
-    console.log("products id:", product_id);
-    const sql = "delete  from cart where user_id=? AND product_id = ?"
+    const deleteItem=req.params.deletItem
+    console.log("deletItem",deleteItem);
+    
+    if(deleteItem === true){
+        const sql = "delete  from cart where user_id=? AND product_id = ?"
     db.query(sql, [ user_id,product_id], (err, result) => {
         if (err) {
             return resp.status(500).json({ message: 'server error', success: false,error:err })
         } 
             resp.status(200).json({ message: "delete item  from cart", success: true,data:result })
+    })
+    }else{
+
+        
+        const getQuentity = "select quantity from cart where user_id = ? AND product_id = ? "
+        db.query(getQuentity, [user_id, product_id], (err1, results) => {
+        if (err1) {
+           return resp.status(500).json({message:"server error",success:false})
+
+        }
+        const quantity = results.map((q) => q)
+        const newQuan = Number(quantity[0].quantity) - 1
+        
+        const updateQuentity = "update cart set quantity = ? where user_id = ? AND product_id = ? "
+        db.query(updateQuentity, [newQuan, user_id, product_id], (err, result) => {
+            if (err) {
+                return resp.status(500).json({ message: "server error", success: false })
+            }
+            resp.status(200).json({ message: "item remove from cart", success: true })
+        })
+        
+        
         
     })
-
-
+    
+    
 }
+}
+

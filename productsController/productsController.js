@@ -231,7 +231,7 @@ job =cron.schedule('0 14 * * *' ,(req,resp)=>{
   // endOffer()
 })
 
-
+  
 
 
 export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts,getOffersProducts }

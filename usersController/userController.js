@@ -114,7 +114,7 @@ export const loginUser =async (req, resp) => {
     console.log("costumer passs",password);
     const isMatch= await bcrypt.compare(password,user.password )
 
-    console.log("is match value is",isMatch);
+    console.log("is match value is",isMatch);  
     
 
     
