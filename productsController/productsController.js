@@ -219,6 +219,7 @@ const endOffer =(req,resp)=>{
       }
       // resp.status(200).json({message:"offers is end , next offer is comming soon ",success:true})
       job.stop()
+      console.log("Cron job stopped after rest offers products");
     })
     
   })
@@ -227,8 +228,8 @@ const endOffer =(req,resp)=>{
  
 }
 // function calling and job start 
-job =cron.schedule('0 14 * * *' ,(req,resp)=>{
-  // endOffer()
+job =cron.schedule('0 23 * * *' ,(req,resp)=>{
+  endOffer()
 })
 
   
