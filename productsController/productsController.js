@@ -6,7 +6,6 @@ const addProduct = (req, resp) => {
   const image_url=req.cloudinaryImage.url
   console.log("imgpath",image_url);
   
-  
   const { shopkeeper_id, category, name, description, price, discount, stock } = req.body
   // const image_url = req.file ? `/uploads/${req.file.filename}` : null;
   const sql = 'INSERT INTO products (shopkeeper_id,category,name,description ,price,discount,stock,image_url) VALUES  ( ? ,?, ? , ? , ? , ? , ? ,? )'

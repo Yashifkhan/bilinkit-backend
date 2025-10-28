@@ -41,7 +41,6 @@ import dotenv from "dotenv"
 import cors from "cors"
 import router from "./shopKeeperRoute/shopkeeperRoute.js"
 import { fileURLToPath } from 'url';
-// import { productRouter } from "./routes/productRoutes.js";
 dotenv.config()
 
 app.use(express.json())

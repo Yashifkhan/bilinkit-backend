@@ -84,7 +84,10 @@ import { v2 as cloudinary } from "cloudinary"
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import nodemailer from "nodemailer"
 dotenv.config();
+
+
 const uploadDir = "uploads";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
@@ -149,3 +152,14 @@ export const uploadFile = async (req, resp, next) => {
     }
 
 }
+
+export const transporter = nodemailer.createTransport({
+  
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false, 
+  auth: {
+    user: process.env.SENDER_EMAIL,
+    pass: process.env.SMTP_PASS,
+  },
+});
