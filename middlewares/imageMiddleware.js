@@ -22,7 +22,7 @@
 
 // export const uploadFile = async (req, resp, next) => {
 //     console.log("middleware is running ");
-    
+
 
 //     try {
 //         cloudinary.config({
@@ -41,7 +41,7 @@
 //             console.log("checking ");
 //             return resp.status(400).json({ success: false, message: "No file uploaded" });
 //         }
-        
+
 
 //        const uploadResult = await cloudinary.uploader.upload(req.file.path, { folder: "products" })
 
@@ -105,61 +105,60 @@ const storage = multer.diskStorage({
 export const upload = multer({ storage });
 
 export const uploadFile = async (req, resp, next) => {
-    console.log("middleware is running ");
-    
-
-    try {
-        cloudinary.config({
-            cloud_name: process.env.CLOUD_NAME,
-            api_key: process.env.API_KEY,
-            api_secret: process.env.API_SECRET 
-        })
+  console.log("middleware is running ");
 
 
-        console.log("cloude name", process.env.CLOUD_NAME);
-        console.log("api_key",process.env.API_KEY);
-        console.log("api_secret", process.env.API_SECRET);
+  try {
+    cloudinary.config({
+      cloud_name: process.env.CLOUD_NAME,
+      api_key: process.env.API_KEY,
+      api_secret: process.env.API_SECRET
+    })
 
-        console.log("req,file",req.file);
-        if (!req.file) {
-            console.log("checking ");
-            return resp.status(400).json({ success: false, message: "No file uploaded" });
-        }
-        
 
-       const uploadResult = await cloudinary.uploader.upload(req.file.path, { folder: "products" })
+    console.log("cloude name", process.env.CLOUD_NAME);
+    console.log("api_key", process.env.API_KEY);
+    console.log("api_secret", process.env.API_SECRET);
 
-        console.log("stage 1");
-
-        console.log("upload result", uploadResult)
-
-        const optimizeUrl = cloudinary.url(uploadResult.public_id, {
-            fetch_format: 'auto',
-            quality: 'auto'
-        });
-
-        req.cloudinaryImage = {
-            url: uploadResult.secure_url,
-            optimizedUrl: optimizeUrl,
-            public_id: uploadResult.public_id,
-        };
-
-        console.log("optimize url", optimizeUrl);
-        next()
-    } catch (error) {
-        console.log("error", error);
-
+    console.log("req,file", req.file);
+    if (!req.file) {
+      console.log("checking ");
+      return resp.status(400).json({ success: false, message: "No file uploaded" });
     }
+
+
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, { folder: "products" })
+
+    console.log("stage 1");
+
+    console.log("upload result", uploadResult)
+
+    const optimizeUrl = cloudinary.url(uploadResult.public_id, {
+      fetch_format: 'auto',
+      quality: 'auto'
+    });
+
+    req.cloudinaryImage = {
+      url: uploadResult.secure_url,
+      optimizedUrl: optimizeUrl,
+      public_id: uploadResult.public_id,
+    };
+
+    console.log("optimize url", optimizeUrl);
+    next()
+  } catch (error) {
+    console.log("error", error);
+
+  }
 
 }
 
 export const transporter = nodemailer.createTransport({
-  
   host: "smtp-relay.brevo.com",
   port: 587,
-  secure: false, 
+  secure: false,
   auth: {
-    user: process.env.SENDER_EMAIL,
+    user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
