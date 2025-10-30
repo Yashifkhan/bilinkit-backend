@@ -226,10 +226,11 @@ const endOffer =(req,resp)=>{
  
 }
 // function calling and job start 
-job =cron.schedule('0 23 * * *' ,(req,resp)=>{
+job =cron.schedule('35 21 * * *' ,()=>{
+  console.log("cron is running");
   endOffer()
 })
-
+job.start()
   
 
 
