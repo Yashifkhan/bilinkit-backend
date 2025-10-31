@@ -3,9 +3,9 @@ import cron from "node-cron"
 
 const addProduct = (req, resp) => {
   console.log("add products function is executed");
-  const image_url=req.cloudinaryImage.url
-  console.log("imgpath",image_url);
-  
+  const image_url = req.cloudinaryImage.url
+  console.log("imgpath", image_url);
+
   const { shopkeeper_id, category, name, description, price, discount, stock } = req.body
   // const image_url = req.file ? `/uploads/${req.file.filename}` : null;
   const sql = 'INSERT INTO products (shopkeeper_id,category,name,description ,price,discount,stock,image_url) VALUES  ( ? ,?, ? , ? , ? , ? , ? ,? )'
@@ -155,7 +155,6 @@ const getOffersProducts = (req, resp) => {
       return resp.status(500).json({ message: "Server error", success: false, error: err });
     }
 
-    // ✅ Change: send 200 instead of 404
     if (!offersResult.length) {
       return resp.status(200).json({ message: "No offers found", success: true, data: [] });
     }
@@ -168,10 +167,31 @@ const getOffersProducts = (req, resp) => {
         return resp.status(500).json({ message: "Products not found", success: false, error: err });
       }
 
+
+
       const mergedOffers = offersResult.map((offer) => {
+        // 1️⃣ Find matching product for this offer
         const product = productsResult.find((prod) => prod.id === offer.product_id);
-        return { ...offer, productsInfo: product || null };
+
+        // 2️⃣ If product not found (for safety)
+        if (!product) return null;
+
+        // 3️⃣ Calculate offer price
+        const offer_price = product.price - (product.price * offer.discount / 100);
+
+        // 4️⃣ Merge both data objects
+        return {
+          ...offer,
+          productInfo: product,
+          actual_price: product.price,
+          offer_price,
+        };
       });
+
+      // 5️⃣ Filter null values if any product not found
+      const finalOffers = mergedOffers.filter(Boolean);
+      console.log(finalOffers);
+
 
       // ✅ Even if no merged offers, still return 200
       return resp.status(200).json({
@@ -188,50 +208,50 @@ const getOffersProducts = (req, resp) => {
 let job;
 
 // function declartion for end offer 
-const endOffer =(req,resp)=>{
+const endOffer = (req, resp) => {
   console.log("end products offer function is executed");
-  
-  const getExpireOfferProduct="SELECT * from offers_products where end_date < NOW() and  status = 1"
-  db.query(getExpireOfferProduct,(err,expireProductsResult)=>{
-    if(err){
-      return resp.status(500).json({message:"offers product not get",success:false,error:err})
+
+  const getExpireOfferProduct = "SELECT * from offers_products where end_date < NOW() and  status = 1"
+  db.query(getExpireOfferProduct, (err, expireProductsResult) => {
+    if (err) {
+      return resp.status(500).json({ message: "offers product not get", success: false, error: err })
     }
 
     if (expireProductsResult.length === 0) {
-      return resp.status(200).json({message: "No expired offers to update",success: true});
-     }
-
-  console.log("result of get expire products",expireProductsResult);
-  const expireProductsIds=expireProductsResult.map((p)=>p.product_id)
-  console.log("expire products ids" ,expireProductsIds);
-  const updateStatusExpireProducs=`update offers_products set status = 0 where product_id in (?)`
-  db.query(updateStatusExpireProducs,[expireProductsIds],(err,updateStatusExpireResult)=>{
-    if(err){
-       return resp.status(500).json({message:"status not updated offers products ",success:false,error:err})
+      return resp.status(200).json({ message: "No expired offers to update", success: true });
     }
-    console.log("updateStatusExpireResult",updateStatusExpireResult);
-    const updateStatusRagularProducts=`update products set is_offer = 0 where id in (?) and status = 1`
-    db.query(updateStatusRagularProducts,[expireProductsIds],(err,result)=>{
-      if(err){
-         return resp.status(500).json({message:"product not found",success:false,error:err})
+
+    console.log("result of get expire products", expireProductsResult);
+    const expireProductsIds = expireProductsResult.map((p) => p.product_id)
+    console.log("expire products ids", expireProductsIds);
+    const updateStatusExpireProducs = `update offers_products set status = 0 where product_id in (?)`
+    db.query(updateStatusExpireProducs, [expireProductsIds], (err, updateStatusExpireResult) => {
+      if (err) {
+        return resp.status(500).json({ message: "status not updated offers products ", success: false, error: err })
       }
-      // resp.status(200).json({message:"offers is end , next offer is comming soon ",success:true})
-      job.stop()
-      console.log("Cron job stopped after rest offers products");
+      console.log("updateStatusExpireResult", updateStatusExpireResult);
+      const updateStatusRagularProducts = `update products set is_offer = 0 where id in (?) and status = 1`
+      db.query(updateStatusRagularProducts, [expireProductsIds], (err, result) => {
+        if (err) {
+          return resp.status(500).json({ message: "product not found", success: false, error: err })
+        }
+        // resp.status(200).json({message:"offers is end , next offer is comming soon ",success:true})
+        job.stop()
+        console.log("Cron job stopped after rest offers products");
+      })
+
     })
-    
+
   })
-      
-  })
- 
+
 }
 // function calling and job start 
-job =cron.schedule('35 21 * * *' ,()=>{
+job = cron.schedule('35 21 * * *', () => {
   console.log("cron is running");
   endOffer()
 })
 job.start()
-  
 
 
-export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts,getOffersProducts }
+
+export { addProduct, getProducts, updateProduct, getAllProducts, updateProductStatus, addOfferProducts, getOffersProducts }
